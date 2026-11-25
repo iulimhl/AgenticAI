@@ -3,10 +3,12 @@ from google import genai
 from google.genai import types
 
 load_dotenv()
-client = genai.Client()
+client = genai.Client(
+    http_options=types.HttpOptions(
+        retry_options=types.HttpRetryOptions(attempts=6, initial_delay=2.0)
+    )
+)
 
-# TODO: Replace this naive prompt with an engineered 4-Pillar System Prompt
-# (Role, Context & Few-Shot Examples, Hard Constraints, and Output Contract)
 SYSTEM_PROMPT = """
 You are a senior Linux kernel and cybersecurity auditor.
 Your task is to check Linux commands for security risks.
@@ -15,15 +17,15 @@ Here are some examples:
 
 Input: ls -la
 Output:
--Risk Level: LOW
--Vulnerability Explanation: this command only lists files
--Remediation Command: ls -la
+- Risk Level: LOW
+- Vulnerability Explanation: this command only lists files
+- Remediation Command: ls -la
 
 Input: chmod 777 file.txt
 Output:
--Risk Level: HIGH
--Vulnerability Explanation: anyone can modify the file
--Remediation Command: chmod 600 file.txt
+- Risk Level: HIGH
+- Vulnerability Explanation: anyone can modify the file
+- Remediation Command: chmod 600 file.txt
 
 Rules:
 -Only answer questions about Linux and cybersecurity
@@ -33,22 +35,20 @@ Rules:
 ACCESS DENIED: Scope limited to Linux Security Auditing.
 
 For valid commands, use only these 3 bullet points:
--Risk Level: LOW, MEDIUM, HIGH or CRITICAL
--Vulnerability Explanation: one short sentence
--Remediation Command: a safer command or fix
+- Risk Level: LOW, MEDIUM, HIGH or CRITICAL
+- Vulnerability Explanation: one short sentence
+- Remediation Command: a safer command or fix
 
 Do not add anything else.
 """
 
 def ask_auditor(user_input: str) -> str:
-    # Optional tip: Wrap user_input in XML tags like f"<command>{user_input}</command>"
-    # and instruct the system prompt to treat everything inside <command> as untrusted data.
     response = client.models.generate_content(
         model="gemini-3.5-flash-lite",
         contents=user_input,
         config=types.GenerateContentConfig(
             system_instruction=SYSTEM_PROMPT,
-            temperature=0.1,  # TODO: Adjust temperature for deterministic auditing
+            temperature=0.1,
         ),
     )
     return response.text.strip()

@@ -4,9 +4,11 @@ from google import genai
 from google.genai import types
 
 load_dotenv()
-client = genai.Client()
-
-# 1. Deterministic local function with type annotations and docstring
+client = genai.Client(
+    http_options=types.HttpOptions(
+        retry_options=types.HttpRetryOptions(attempts=6, initial_delay=2.0)
+    )
+)
 def lookup_cve_details(cve_id: str) -> str:
     """Look up the CVSS severity score and technical summary for a given CVE identifier.
 
@@ -29,7 +31,6 @@ def lookup_cve_details(cve_id: str) -> str:
     return json.dumps(record)
 
 def run_manual_tool_roundtrip(user_prompt: str):
-    # We disable automatic_function_calling so you can build the 4-step round-trip yourself
     config = types.GenerateContentConfig(
         system_instruction="You are a cybersecurity assistant. Always use tools to verify CVE data.",
         tools=[lookup_cve_details],
@@ -38,8 +39,6 @@ def run_manual_tool_roundtrip(user_prompt: str):
     )
 
     messages = [types.Content(role="user", parts=[types.Part.from_text(text=user_prompt)])]
-
-    # Step 1 & 2: Send prompt + tool declarations; inspect the model's tool call request
     response = client.models.generate_content(
         model="gemini-3.5-flash-lite",
         contents=messages,

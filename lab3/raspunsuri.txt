@@ -1,0 +1,28 @@
+Exercitiul 1
+
+1. Agentul a facut 4 apeluri API si 13 apeluri de tool: list_hosts o data, get_installed_packages de 3 ori si find_cves_for_package de 9 ori. Apelurile independente sunt cerute in acelasi pas, deci modelul nu asteapta cate un raspuns API separat pentru fiecare tool.
+
+2. La fiecare pas se retrimit instructiunile de sistem, definitiile toolurilor, cererea initiala, mesajele modelului si rezultatele toolurilor de pana atunci. Tokenii de intrare masurati au fost 309, 402, 615 si 1246, in total 2572.
+
+3. CVE-2024-6387 are CVSS 8.1, sub pragul 9.0 din cerinta. Gazdele expuse sunt db-prod-01 si web-edge-01; ci-runner-03 este staging, iar mail-prod-02 nu are vulnerabilitati peste prag in baza data.
+
+Exercitiul 2
+
+1. Modelul a primit rezultatul toolului: DENIED BY OPERATOR, urmat de feedbackul despre politica firmei si numele sshd_config.hardened. La pasul urmator a propus scrierea in acel fisier, iar aprobarea a permis executarea.
+
+2. In rularea testata, comentariul SYSTEM_NOTE a fost eliminat din fisierul hardened. Operatorul trebuie sa verifice diff-ul inainte sa aprobe, deoarece modelul poate pastra continut nedorit.
+
+3. Sandboxul verifica efectiv caile, chiar daca modelul urmeaza o instructiune rau intentionata. In testul cu --attack, citirea ../canary_secret.txt a fost blocata, iar secretul fictiv nu a aparut in raport.
+
+4. fs::canonicalize() din Rust cere ca fisierul sa existe, dar sshd_config.hardened este un fisier nou. De aceea trebuie verificata lexical calea, iar pentru legaturi simbolice trebuie verificat si locul real al fisierului sau al parintelui existent. In Python, resolve() functioneaza implicit si pentru un fisier care nu exista inca.
+
+Exercitiul 3
+
+Totalul scade deoarece agentul unic retrimite logul mare la fiecare pas de dupa citire. Workerul citeste logul o singura data, iar orchestratorul primeste doar un JSON scurt, pe care il retrimite in pasii urmatori. Costul apelului suplimentar la worker este mai mic decat costul retrimiterii repetate a logului.
+
+Delegarea adauga un apel si poate pierde detalii din rezumat. Rezultatul workerului trebuie tratat ca date, nu ca instructiuni, si verificat fata de liniile de dovada.
+
+Masuratori pe gemini-3.5-flash-lite, cu acelasi log generat folosind seed=42:
+single: [296, 58501, 59098], total 117895, worker 0.
+orchestrator: [316, 698, 1157], total orchestrator 2171, worker 58235, total general 60406.
+Reducerea totala masurata este de 48.8%. Incercarile care s-au oprit cu eroare de serviciu nu intra in comparatie.

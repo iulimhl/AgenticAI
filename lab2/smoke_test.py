@@ -1,15 +1,16 @@
 import os
 from dotenv import load_dotenv
 from google import genai
-
-# Load environment variables from .env into os.environ
+from google.genai import types
 load_dotenv()
 
 api_key = os.getenv("GEMINI_API_KEY")
 assert api_key, "ERROR: GEMINI_API_KEY not found. Check your .env file!"
-
-# Initialize the client (automatically reads GEMINI_API_KEY from os.environ)
-client = genai.Client()
+client = genai.Client(
+    http_options=types.HttpOptions(
+        retry_options=types.HttpRetryOptions(attempts=6, initial_delay=2.0)
+    )
+)
 
 response = client.models.generate_content(
     model="gemini-3.5-flash-lite",

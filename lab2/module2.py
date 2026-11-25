@@ -5,7 +5,11 @@ from google import genai
 from google.genai import types
 
 load_dotenv()
-client = genai.Client()
+client = genai.Client(
+    http_options=types.HttpOptions(
+        retry_options=types.HttpRetryOptions(attempts=6, initial_delay=2.0)
+    )
+)
 
 class SeverityLevel(str, Enum):
     LOW = "LOW"
@@ -13,11 +17,6 @@ class SeverityLevel(str, Enum):
     HIGH = "HIGH"
     CRITICAL = "CRITICAL"
 
-# TODO: Add the missing fields to LogAnalysis with clear Field(description="...") hints:
-# - severity: SeverityLevel
-# - error_code: int
-# - is_compromised: bool
-# - recommended_fix: list[str]
 class LogAnalysis(BaseModel):
     severity: SeverityLevel = Field(description="Security risk level")
     error_code: int = Field(description="Error code from the log or -1 if missing")
@@ -25,7 +24,6 @@ class LogAnalysis(BaseModel):
     summary: str = Field(description="One sentence describing the event")
     recommended_fix: list[str] = Field(description="Steps to fix the security problem")
 
-# TODO: Improve this system prompt so the model accurately classifies SIEM logs
 SYSTEM_PROMPT = """
 You are a cybersecurity analyst.
 Analyze server logs and identify security problems.
@@ -49,7 +47,6 @@ def parse_server_log(raw_log: str) -> LogAnalysis:
             response_schema=LogAnalysis,
         ),
     )
-    # Validate and deserialize JSON string directly into the Pydantic object
     return LogAnalysis.model_validate_json(response.text)
 
 if __name__ == "__main__":
@@ -59,7 +56,6 @@ if __name__ == "__main__":
     )
     print(parse_server_log(sample).model_dump_json(indent=2))
 
-# --- Automated Unit Test (Run with: pytest test_module2_structured.py) ---
 def test_ssh_breach_log_parsing():
     sample_log = (
         "2026-10-15 02:11:44 [ALERT] sshd[9012]: Accepted password for root "

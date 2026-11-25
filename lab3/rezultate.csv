@@ -1,0 +1,3 @@
+model,mode,input_tokens_per_step,orchestrator_total,worker_total,grand_total,stop_reason
+gemini-3.5-flash-lite,single,"[296, 58501, 59098]",117895,0,117895,done
+gemini-3.5-flash-lite,orchestrator,"[316, 698, 1157]",2171,58235,60406,done

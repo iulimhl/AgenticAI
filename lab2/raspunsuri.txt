@@ -1,0 +1,15 @@
+1. Pentru un model de 70B in 4 biti:
+VRAM = 70 * (4 / 8) * 1.2 = 42 GB.
+Nu incape integral pe o placa video de 24 GB, conform estimarii din laborator.
+
+2. Aleg Mistral-7B-Instruct-v0.3, deoarece este antrenat sa urmeze instructiuni. Modelul Base este destinat continuarii textului, deci varianta Instruct este potrivita pentru un agent care trebuie sa raspunda structurat si sa ceara apeluri de functii.
+
+3. Decodarea hex in Python transforma octetii in text, fara sa execute textul ca instructiuni sau cod. Rezultatul este transmis separat de log, iar regulile pentru detectarea injectiei si alegerea severitatii raman in promptul de sistem.
+
+4. In tabel, naive foloseste promptul si schema initiale. Varianta prompt foloseste regulile, exemplele si schema imbunatatite, iar engineered adauga decodarea hex in Python.
+
+Pe Qwen, promptul imbunatatit a detectat injectia si a ales HIGH in 3/3 rulari, dar a gresit decodarea. Cu decodarea in Python au trecut toate cele trei verificari in 3/3 rulari.
+
+Pe Gemini, varianta naive a trecut toate verificarile in 3/3 rulari. Varianta prompt a primit un raspuns corect si doua erori 503. Varianta engineered a trecut toate verificarile in 3/3 raspunsuri primite; anterior au existat patru incercari esuate cu eroare 503.
+
+Ratele din rezultate.csv sunt calculate doar pentru raspunsurile primite. Erorile sunt notate separat; N/A inseamna ca serviciul nu a furnizat niciun raspuns pentru evaluare, nu ca modelul a raspuns gresit.
